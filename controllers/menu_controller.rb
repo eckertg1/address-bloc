@@ -47,8 +47,9 @@ class MenuController
     end
 
     def view_all_entries
-        address_book.entries.each do |entry|
+        address_book.entries.each_with_index do |entry, index|
             system "clear"
+            puts "Entry number: #{index + 1}"
             puts entry.to_s
             
             entry_submenu(entry)
@@ -75,7 +76,52 @@ class MenuController
         puts "New entry created"
     end
     
+    def number_or_nil(string)
+        num = string.to_i
+        num if num.to_s == string
+    end
+    
     def search_entries
+        print "Please entry your address number: "
+        selection_number = gets.chomp
+        selection_number = number_or_nil(selection_number)
+        if selection_number == nil
+            system "clear"
+            puts "Invalid selection, please enter a number"
+            search_entries
+        end
+        entry_display_selection = address_book.entries[selection_number - 1]
+        if entry_display_selection == nil
+            system "clear"
+            puts "No such entry exists\nWould you like to try another search? Y/N"
+            retry_search = gets.chomp
+            retry_search.upcase!
+            if retry_search == "Y"
+                system "clear"
+                search_entries
+            else
+                system "clear"
+                main_menu
+            end
+        elseif entry_display_selection < 0
+            system "clear"
+            puts "No such entry exists\nWould you like to try another search? Y/N"
+            retry_search = gets.chomp
+            retry_search.upcase
+            if retry_search == "Y"
+                system "clear"
+                search_entries
+            else
+                system "clear"
+                main_menu
+            end
+        else
+            entry = address_book.entries[selection_number - 1]
+            system "clear"
+            puts "Entry number: #{selection_number}"
+            puts entry.to_s
+            entry_submenu(entry)
+        end
     end
     
     def read_csv

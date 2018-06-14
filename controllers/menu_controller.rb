@@ -1,5 +1,5 @@
 require_relative '../models/address_book'
- 
+
 class MenuController
     attr_reader :address_book
  
@@ -33,7 +33,7 @@ class MenuController
                 main_menu
             when 4
                 system "clear"
-                read_csv
+                address_book.import_from_csv('entries.csv')
                 main_menu
             when 5
                 puts "Good-Bye!"

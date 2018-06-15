@@ -33,7 +33,7 @@ class MenuController
                 main_menu
             when 4
                 system "clear"
-                address_book.import_from_csv('entries.csv')
+                read_csv
                 main_menu
             when 5
                 puts "Good-Bye!"
@@ -45,13 +45,31 @@ class MenuController
                 main_menu
         end
     end
+    
+    def read_csv
+        print "Enter CSV file to import: "
+        file_name = gets.chomp
+        
+        if file_name.empty?
+            system "clear"
+            puts "No CSV file read"
+            main_menu
+        end
+        
+        begin
+            entry_count = address_book.import_from_csv(file_name).count
+            system "clear"
+            puts "#{entry_count} new entries added from #{file_name}"
+        rescue
+            puts "#{file_name} is not a valid CSV file, please enter the name of a valid CSV file"
+            read_csv
+        end
+    end
 
     def view_all_entries
-        address_book.entries.each_with_index do |entry, index|
+        address_book.entries.each do |entry|
             system "clear"
-            puts "Entry number: #{index + 1}"
             puts entry.to_s
-            
             entry_submenu(entry)
         end
         
@@ -76,56 +94,71 @@ class MenuController
         puts "New entry created"
     end
     
+    def delete_entry(entry)
+        address_book.entries.delete(entry)
+        puts "#{entry.name} has been deleted"
+    end
+    
     def number_or_nil(string)
         num = string.to_i
         num if num.to_s == string
     end
     
+    def edit_entry(entry)
+        print "Updated name: "
+        name = gets.chomp
+        print "Updated phone number: "
+        phone_number = gets.chomp
+        print "Updated email: "
+        email = gets.chomp
+        entry.name = name if !name.empty?
+        entry.phone_number = phone_number if !phone_number.empty?
+        entry.email = email if !email.empty?
+        system "clear"
+        puts "Updated entry: "
+        puts entry
+    end
+    
     def search_entries
-        print "Please entry your address number: "
-        selection_number = gets.chomp
-        selection_number = number_or_nil(selection_number)
-        if selection_number == nil
-            system "clear"
-            puts "Invalid selection, please enter a number"
-            search_entries
-        end
-        entry_display_selection = address_book.entries[selection_number - 1]
-        if entry_display_selection == nil
-            system "clear"
-            puts "No such entry exists\nWould you like to try another search? Y/N"
-            retry_search = gets.chomp
-            retry_search.upcase!
-            if retry_search == "Y"
-                system "clear"
-                search_entries
-            else
-                system "clear"
-                main_menu
-            end
-        elseif entry_display_selection < 0
-            system "clear"
-            puts "No such entry exists\nWould you like to try another search? Y/N"
-            retry_search = gets.chomp
-            retry_search.upcase
-            if retry_search == "Y"
-                system "clear"
-                search_entries
-            else
-                system "clear"
-                main_menu
-            end
+        print "Search by name: "
+        name = gets.chomp
+        
+        match = address_book.binary_search(name)
+        system "clear"
+        
+        if match
+            puts match.to_s
+            search_submenu(match)
         else
-            entry = address_book.entries[selection_number - 1]
-            system "clear"
-            puts "Entry number: #{selection_number}"
-            puts entry.to_s
-            entry_submenu(entry)
+            puts "No match found for #{name}"
         end
     end
     
-    def read_csv
+    def search_submenu(entry)
+        puts "\nd - delete entry"
+        puts "e - edit this entry"
+        puts "m - return to main menu"
+        selection = gets.chomp
+        case selection
+            when "d"
+                system "clear"
+                delete_entry(entry)
+                main_menu
+            when "e"
+                edit_entry(entry)
+                system "clear"
+                main_menu
+            when "m"
+                system "clear"
+                main_menu
+            else
+                system "clear"
+                puts "#{selection} is not a valid input"
+                puts entry.to_s
+                search_submenu(entry)
+        end
     end
+    
     def entry_submenu(entry)
         puts "n - next entry"
         puts "d - delete entry"
@@ -138,9 +171,10 @@ class MenuController
             when "n"
                 
             when "d"
-                
+                delete_entry(entry)
             when "e"
-                
+                edit_entry(entry)
+                entry_submenu(entry)
             when "m"
                 system "clear"
                 main_menu
